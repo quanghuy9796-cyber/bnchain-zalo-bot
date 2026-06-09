@@ -39,7 +39,8 @@ async def receive_webhook(request: Request):
     data = await request.json()
     try:
         event = data.get("event_name", "")
-        if event != "g_send_image":
+
+        if event not in ["g_send_image", "user_send_group_image"]:
             return JSONResponse({"status": "ignored"})
 
         msg = data.get("message", {})
@@ -49,6 +50,7 @@ async def receive_webhook(request: Request):
 
         image_url = attachments[0].get("payload", {}).get("url", "")
         group_id = data.get("recipient", {}).get("id", "")
+        sender_name = data.get("sender", {}).get("display_name", "Lái xe")
 
         if not image_url or not group_id:
             return JSONResponse({"status": "missing data"})
@@ -57,18 +59,18 @@ async def receive_webhook(request: Request):
         model = genai.GenerativeModel("gemini-2.5-flash")
         image = PIL.Image.open(io.BytesIO(img_data))
 
-        prompt = """Đây là ảnh container hoặc seal/chì niêm phong.
+        prompt = """Đây là ảnh container hoặc seal/chì niêm phong trong ngành logistics/vận tải.
 Hãy đọc và trích xuất:
 1. Số container (format: 4 chữ cái + 7 số, ví dụ: TCKU3456789)
 2. Số chì/seal (dãy số trên dây chì niêm phong)
 3. Thời gian nếu có trên ảnh
-4. Vị trí nếu có trên ảnh
+4. Vị trí/địa điểm nếu có trên ảnh
 
 Trả lời đúng format:
 Container: [số container]
 Chì: [số chì]
-Thời gian: [nếu có]
-Vị trí: [nếu có]
+Thời gian: [nếu có, nếu không ghi Không có]
+Vị trí: [nếu có, nếu không ghi Không có]
 
 Nếu không đọc được thì ghi: Không đọc được - ảnh mờ hoặc không đúng góc chụp"""
 
@@ -82,7 +84,7 @@ Nếu không đọc được thì ghi: Không đọc được - ảnh mờ hoặ
         }
         payload = {
             "recipient": {"id": group_id},
-            "message": {"text": f"BN CHAIN BOT\n{result_text}"}
+            "message": {"text": f"BN CHAIN BOT\n[{sender_name}]\n{result_text}"}
         }
         requests.post(reply_url, json=payload, headers=headers)
 
