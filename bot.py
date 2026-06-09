@@ -3,7 +3,6 @@ import requests
 import google.generativeai as genai
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
 import PIL.Image
 import io
 
@@ -21,7 +20,15 @@ async def root():
 
 @app.get("/zalo_verifierGeQV9QEF2WrRYhi2lVWtLKsEX5wX-548EJCs.html")
 async def zalo_verify():
-    return HTMLResponse("zalo_verifierGeQV9QEF2WrRYhi2lVWtLKsEX5wX-548EJCs")
+    return HTMLResponse("""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta property="zalo-platform-site-verification" content="GeQV9QEF2WrRYhi2lVWtLKsEX5wX-548EJCs" />
+</head>
+<body>
+There Is No Limit To What You Can Accomplish Using Zalo!
+</body>
+</html>""")
 
 @app.get("/webhook")
 async def verify_webhook(request: Request):
@@ -54,7 +61,8 @@ async def receive_webhook(request: Request):
 Hãy đọc và trích xuất:
 1. Số container (format: 4 chữ cái + 7 số, ví dụ: TCKU3456789)
 2. Số chì/seal (dãy số trên dây chì niêm phong)
-3. Thời gian và vị trí nếu có trên ảnh
+3. Thời gian nếu có trên ảnh
+4. Vị trí nếu có trên ảnh
 
 Trả lời đúng format:
 Container: [số container]
